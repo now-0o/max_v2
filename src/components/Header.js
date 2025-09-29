@@ -1,24 +1,20 @@
 import logo from "../assets/logo.png";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api/axiosInstance";
 
 function Header() {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
-      await axios.post("http://localhost:4000/auth/logout", {}, { withCredentials: true });
+      await api.post("/auth/logout");
       localStorage.removeItem("accessToken");
-  
-      // ✅ 로그아웃 후 로그인 시 계정 선택을 강제하도록 플래그 저장
       localStorage.setItem("forceKakaoLogin", "true");
-  
       navigate("/", { replace: true });
     } catch (err) {
       console.error("로그아웃 실패:", err);
     }
   };
-  
 
   return (
     <header className="w-full bg-white border-b border-gray-200">
