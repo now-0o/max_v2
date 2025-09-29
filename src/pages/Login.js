@@ -25,7 +25,7 @@ function Login() {
 
   const handleKakaoLogin = (forceLogin = false) => {
     window.Kakao.Auth.authorize({
-      redirectUri: "http://1.234.53.169:3000/oauth/kakao",
+      redirectUri: "http://maxsportsdj.cafe24.com:3000",
       ...(forceLogin && { prompt: "login" }) // ✅ forceLogin true면 계정선택 강제
     });
   };  
