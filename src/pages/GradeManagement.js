@@ -2,6 +2,7 @@ import { useState } from "react";
 import Header from "../components/Header";
 import SchoolTab from "../components/SchoolTab"; // 추가한 컴포넌트
 import ExamScoreTab from "../components/ExamScoreTab";
+import PracticeScoreTab from "../components/PracticeScoreTab";
 
 function GradeManagement() {
   const [activeTab, setActiveTab] = useState("school");

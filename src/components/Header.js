@@ -24,6 +24,7 @@ function Header() {
         </a>
 
         <nav className="flex gap-4 text-sm text-gray-600">
+          <a href="/analysis" className="hover:text-brand-primary">입시분석</a>
           <a href="/scores" className="hover:text-brand-primary">성적관리</a>
           <button
             onClick={handleLogout}
