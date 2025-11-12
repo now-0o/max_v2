@@ -3,99 +3,57 @@ import Header from "../components/Header";
 import api from "../api/axiosInstance";
 
 function AnalysisResult() {
-  //예시
-  const exampleResults = [
-    {
-      id: 1,
-      university: "강릉원주대학교",
-      region: "합격",
-      department: "치위생학과",
-      recruitType: "국어 · 가군 · 경쟁률 입함",
-      subjects: "반영과목 : 국어 · 수학 · 영어 · 탐구 · 한국사",
-      myScore: 92.0,
-      cutoffScore: 90.0,
-      status: "합격",
-      detailLink: "#",
-    },
-    {
-      id: 2,
-      university: "강원대학교",
-      region: "합격",
-      department: "인테리어디자인학과",
-      recruitType: "국어 · 가군 · 경쟁률 입함",
-      subjects: "반영과목 : 국어 · 수학 · 영어 · 탐구 · 한국사",
-      myScore: 97.0,
-      cutoffScore: 90.0,
-      status: "합격",
-      detailLink: "#",
-    },
-    {
-      id: 3,
-      university: "경상국립대학교",
-      region: "불합격",
-      department: "유아교육과(야)",
-      recruitType: "국어 · 가군 · 경쟁률 입함",
-      subjects: "반영과목 : 국어 · 수학 · 영어 · 탐구 · 한국사",
-      myScore: 82.24,
-      cutoffScore: 86.0,
-      status: "불합격",
-      detailLink: "#",
-    },
-    {
-      id: 4,
-      university: "경희대학교",
-      region: "합격",
-      department: "스포츠의학과",
-      recruitType: "국어 · 가군 · 경쟁률 입함",
-      subjects: "반영과목 : 국어 · 수학 · 영어 · 탐구 · 한국사",
-      myScore: 95.5,
-      cutoffScore: 92.0,
-      status: "합격",
-      detailLink: "#",
-    },
-    {
-      id: 5,
-      university: "서울대학교",
-      region: "불합격",
-      department: "컴퓨터공학과",
-      recruitType: "수학 · 가군 · 경쟁률 입함",
-      subjects: "반영과목 : 국어 · 수학 · 영어 · 탐구 · 한국사",
-      myScore: 88.5,
-      cutoffScore: 95.0,
-      status: "불합격",
-      detailLink: "#",
-    },
-  ];
-
-  const [results, setResults] = useState(exampleResults);
-  const [sortOrder, setSortOrder] = useState("score");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState("before");
   const userId = localStorage.getItem("userId");
 
-//  useEffect(() => {
-//    const fetchData = async () => {
-//      try {
-//        // API 적을 곳
-//      } catch (err) {
-//        console.error("분석 결과 불러오기 실패", err);
-//        setLoading(false);
-//      }
-//    };
-//     fetchData();
-//  }, [userId]);
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+
+    const fetchData = async () => {
+      try {
+        const analysisRes = await api.post("/api/analyze", {
+          userId: userId,
+          mode: 'after'
+        });
+        if (!cancelled) {
+          console.log(analysisRes);
+          if (!analysisRes.data.success) {
+            alert(analysisRes.data.message);
+            setLoading(false);
+            return;
+          }
+
+          // success가 true일 때만 데이터 처리
+          setResults(analysisRes.data.results);
+          setLoading(false);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error("분석 결과 불러오기 실패", err);
+          setLoading(false);
+        }
+      }
+    };
+    fetchData();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   const getStatusBadge = (status) => {
-    if (status === "합격") {
+    if (status === true) {
       return "bg-green-100 text-green-700";
-    } else if (status === "불합격") {
+    } else if (status === false) {
       return "bg-red-100 text-red-700";
     }
     return "bg-gray-100 text-gray-700";
   };
 
-  const getScoreDiff = (myScore, cutoffScore) => {
-    const diff = myScore - cutoffScore;
+  const getScoreDiff = (convertedScore, cutlineScore) => {
+    const diff = convertedScore - cutlineScore;
     if (diff >= 0) {
       return {
         text: (
@@ -117,8 +75,8 @@ function AnalysisResult() {
     }
   };
 
-  const passCount = results.filter((r) => r.status === "합격").length;
-  const failCount = results.filter((r) => r.status === "불합격").length;
+  const passCount = results.filter((r) => r.isPassed === true).length;
+  const failCount = results.filter((r) => r.isPassed === false).length;
 
   if (loading) {
     return (
@@ -166,7 +124,7 @@ function AnalysisResult() {
       <main className="max-w-4xl mx-auto px-4 pb-8">
           <div className="space-y-4">
             {results.map((result) => {
-              const scoreDiff = getScoreDiff(result.myScore, result.cutoffScore);
+              const scoreDiff = getScoreDiff(result.convertedScore, result.cutlineScore);
               return (
                 <div
                   key={result.id}
@@ -174,36 +132,36 @@ function AnalysisResult() {
                 >
                   {/* 상단: 대학명 + 지역/합격여부 */}
                   <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-base font-bold">{result.university}</h3>
+                    <h3 className="text-base font-bold">{result.schoolName}</h3>
                     <span
                       className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadge(
-                        result.status
+                        result.isPassed
                       )}`}
                     >
-                      {result.region}
+                      {result.isPassed === true ? "합격" : "불합격"}
                     </span>
                   </div>
 
                   {/* 학과명 */}
-                  <p className="text-sm text-gray-700 mb-1">{result.department}</p>
+                  <p className="text-sm text-gray-700 mb-1">{result.departmentName}</p>
 
                   {/* 모집 구분 */}
-                  <p className="text-xs text-gray-500 mb-1">{result.recruitType}</p>
+                  <p className="text-xs text-gray-500 mb-1">{result.division}</p>
 
-                  {/* 반영과목 */}
-                  <p className="text-xs text-gray-500 mb-3">{result.subjects}</p>
+//                  {/* 반영과목 */}
+//                  <p className="text-xs text-gray-500 mb-3">{result.subjects}</p>
 
                   {/* 점수 정보 */}
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-sm">
                       <span className="text-gray-600">내 점수: </span>
                       <span className="font-semibold">
-                        {result.myScore.toFixed(2)}
+                        {result.convertedScore}
                       </span>
                       <span className="text-gray-400 mx-2">/</span>
                       <span className="text-gray-600">컷오프: </span>
                       <span className="font-semibold">
-                        {result.cutoffScore.toFixed(2)}
+                        {result.cutlineScore}
                       </span>
                     </div>
                   </div>
@@ -212,12 +170,12 @@ function AnalysisResult() {
                   <div className="relative w-full h-3 bg-gray-200 rounded-full overflow-hidden mb-2">
                     <div
                       className={`h-full rounded-full ${
-                        result.myScore >= result.cutoffScore
+                        result.convertedScore >= result.cutlineScore
                           ? "bg-gradient-to-r from-lime-100 to-lime-500"
                           : "bg-gradient-to-r from-red-100 to-red-500"
                       }`}
                       style={{
-                        width: `${Math.min((result.myScore / result.cutoffScore) * 100, 100)}%`,
+                        width: `${Math.min((result.convertedScore / result.cutlineScore) * 100, 100)}%`,
                       }}
                     ></div>
                   </div>
