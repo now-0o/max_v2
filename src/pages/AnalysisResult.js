@@ -146,10 +146,10 @@ function AnalysisResult() {
                   <p className="text-sm text-gray-700 mb-1">{result.departmentName}</p>
 
                   {/* 모집 구분 */}
-                  <p className="text-xs text-gray-500 mb-1">{result.division}</p>
+                  {/* <p className="text-xs text-gray-500 mb-1">{result.division}</p> */}
 
-//                  {/* 반영과목 */}
-//                  <p className="text-xs text-gray-500 mb-3">{result.subjects}</p>
+                  {/* 반영과목 */}
+                  {/* <p className="text-xs text-gray-500 mb-3">{result.subjects}</p> */}
 
                   {/* 점수 정보 */}
                   <div className="flex items-center justify-between mb-2">

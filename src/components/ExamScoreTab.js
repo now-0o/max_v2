@@ -158,8 +158,16 @@ function ExamScoreTab() {
       // ✅ 시험 결과 이후 → 전체 입력
       return subjects.every((sub) => {
         const slots = scores[sub.id] || {};
+        const isAbsolute = sub.name === "영어" || sub.name === "한국사"; // 절대평가 과목
+
         return Object.keys(slots).every((slotKey) => {
           const slotData = slots[slotKey] || {};
+
+          if (isAbsolute) {
+            // 영어/한국사 → 원점수만
+            return slotData.rawScore;
+          }
+
           if (options[sub.id] && options[sub.id].length > 0) {
             return (
               slotData.optionId &&
@@ -179,7 +187,7 @@ function ExamScoreTab() {
       });
     }
   };
-  
+
 
   return (
     <div>
@@ -266,6 +274,8 @@ function ExamScoreTab() {
           ));
         }
 
+        const isAbsolute = sub.name === "영어" || sub.name === "한국사"; // 절대평가 과목
+
         return (
           <div key={sub.id} className="mb-6 border-b pb-4">
             <h3 className="text-base font-semibold mb-2">{sub.name}</h3>
@@ -292,36 +302,40 @@ function ExamScoreTab() {
                   handleNumericChange(sub.id, sub.name, "rawScore", e.target.value, null, "default")
                 }
               />
-              <input
-                type="text"
-                placeholder="표준점수"
-                className="border p-2 rounded focus:outline-none focus:ring-0"
-                readOnly={mode === "before"}
-                value={scores[sub.id]?.default?.standardScore || ""}
-                onChange={(e) =>
-                  handleNumericChange(sub.id, sub.name, "standardScore", e.target.value, null, "default")
-                }
-              />
-              <input
-                type="text"
-                placeholder="백분위"
-                className="border p-2 rounded focus:outline-none focus:ring-0"
-                readOnly={mode === "before"}
-                value={scores[sub.id]?.default?.percentile || ""}
-                onChange={(e) =>
-                  handleNumericChange(sub.id, sub.name, "percentile", e.target.value, null, "default")
-                }
-              />
-              <input
-                type="text"
-                placeholder="등급"
-                className="border p-2 rounded focus:outline-none focus:ring-0"
-                readOnly={mode === "before"}
-                value={scores[sub.id]?.default?.grade || ""}
-                onChange={(e) =>
-                  handleNumericChange(sub.id, sub.name, "grade", e.target.value, null, "default")
-                }
-              />
+              {!isAbsolute && (
+                <>
+                  <input
+                    type="text"
+                    placeholder="표준점수"
+                    className="border p-2 rounded focus:outline-none focus:ring-0"
+                    readOnly={mode === "before"}
+                    value={scores[sub.id]?.default?.standardScore || ""}
+                    onChange={(e) =>
+                      handleNumericChange(sub.id, sub.name, "standardScore", e.target.value, null, "default")
+                    }
+                  />
+                  <input
+                    type="text"
+                    placeholder="백분위"
+                    className="border p-2 rounded focus:outline-none focus:ring-0"
+                    readOnly={mode === "before"}
+                    value={scores[sub.id]?.default?.percentile || ""}
+                    onChange={(e) =>
+                      handleNumericChange(sub.id, sub.name, "percentile", e.target.value, null, "default")
+                    }
+                  />
+                  <input
+                    type="text"
+                    placeholder="등급"
+                    className="border p-2 rounded focus:outline-none focus:ring-0"
+                    readOnly={mode === "before"}
+                    value={scores[sub.id]?.default?.grade || ""}
+                    onChange={(e) =>
+                      handleNumericChange(sub.id, sub.name, "grade", e.target.value, null, "default")
+                    }
+                  />
+                </>
+              )}
             </div>
           </div>
         );
